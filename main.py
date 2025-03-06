@@ -1,24 +1,29 @@
 import os
 import sqlite3
 
+
 # Function to clear the terminal screen
 def clear_screen():
     os.system("cls" if os.name == "nt" else "clear")
+
 
 # Database setup
 conn = sqlite3.connect("business_tracker.db")
 cursor = conn.cursor()
 
 # Create tables
-cursor.execute("""
+cursor.execute(
+    """
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL
     )
-""")
+"""
+)
 
-cursor.execute("""
+cursor.execute(
+    """
     CREATE TABLE IF NOT EXISTS products (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
@@ -26,9 +31,11 @@ cursor.execute("""
         price REAL NOT NULL,
         FOREIGN KEY (user_id) REFERENCES users (id)
     )
-""")
+"""
+)
 
-cursor.execute("""
+cursor.execute(
+    """
     CREATE TABLE IF NOT EXISTS expenses (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         product_id INTEGER NOT NULL,
@@ -36,9 +43,61 @@ cursor.execute("""
         amount REAL NOT NULL,
         FOREIGN KEY (product_id) REFERENCES products (id)
     )
-""")
+"""
+)
 
 conn.commit()
+
+
+# User registration
+def register():
+    clear_screen()
+    print("=== Register ===")
+    username = input("Enter a username: ")
+    password = input("Enter a password: ")
+    try:
+        cursor.execute(
+            "INSERT INTO users (username, password) VALUES (?, ?)", (username, password)
+        )
+        conn.commit()
+        print("Registration successful! You can now log in.")
+    except sqlite3.IntegrityError:
+        print("Username already exists. Try a different one.")
+
+
+# User login
+def login():
+    clear_screen()
+    print("=== Login ===")
+    username = input("Enter your username: ")
+    password = input("Enter your password: ")
+    cursor.execute(
+        "SELECT id FROM users WHERE username = ? AND password = ?", (username, password)
+    )
+    user = cursor.fetchone()
+    if user:
+        print("Login successful!")
+        return user[0]
+    else:
+        print("Invalid credentials. Try again.")
+        input("Press Enter to continue...")
+        return None
+
+
+# View products
+def view_products(user_id):
+    cursor.execute("SELECT id, name, price FROM products WHERE user_id = ?", (user_id,))
+    products = cursor.fetchall()
+
+    if not products:
+        print("No products found.")
+        return []
+
+    print("\n=== Products ===")
+    for index, (prod_id, name, price) in enumerate(products, start=1):
+        print(f"{index}. {name} - ${price:.2f}")
+
+    return products
 
 
 # Main menu
@@ -103,6 +162,7 @@ def main_menu(user_id):
         elif choice == "5":
             print("Logging out...\n")
             break
+
 
 # Program entry point
 while True:
