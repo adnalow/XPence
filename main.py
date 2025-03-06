@@ -155,8 +155,46 @@ def remove_expense(product_id):
         choice = int(input("Select an expense to remove (number): ")) - 1
         if 0 <= choice < len(expenses):
             expense_id = expenses[choice][0]
-... (40 lines left)
+            cursor.execute("DELETE FROM expenses WHERE id = ?", (expense_id,))
+            conn.commit()
+            print("Expense removed successfully!")
+        else:
+            print("Invalid choice.")
+    except ValueError:
+        print("Invalid input.")
 
+# View product report
+def view_product_report(product_id, price):
+    cursor.execute("SELECT SUM(amount) FROM expenses WHERE product_id = ?", (product_id,))
+    total_expenses = cursor.fetchone()[0] or 0  # Default to 0 if no expenses
+
+    net_income_per_unit = price - total_expenses
+    print("\n=== Product Report ===")
+    print(f"Product Price: ${price:.2f}")
+    print(f"Total Expenses: ${total_expenses:.2f}")
+    print(f"Net Income Per Unit: ${net_income_per_unit:.2f}")
+    input("\nPress Enter to continue...")
+
+# Simulate profit
+def simulate_profit(product_id, price):
+    cursor.execute("SELECT SUM(amount) FROM expenses WHERE product_id = ?", (product_id,))
+    total_expenses = cursor.fetchone()[0] or 0  # Default to 0 if no expenses
+
+    net_income_per_unit = price - total_expenses  # Income for one unit
+    try:
+        quantity = int(input("Enter number of products sold: "))
+        if quantity < 0:
+            print("Quantity cannot be negative.")
+            return
+        total_profit = net_income_per_unit * quantity  # Total profit calculation
+
+        print("\n=== Profit Simulation ===")
+        print(f"Net Income Per Unit: ${net_income_per_unit:.2f}")
+        print(f"Estimated Profit for {quantity} units: ${total_profit:.2f}")
+    except ValueError:
+        print("Invalid input. Please enter a number.")
+    
+    input("\nPress Enter to continue...")
 
 # Main menu
 def main_menu(user_id):
