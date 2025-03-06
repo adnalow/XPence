@@ -99,6 +99,64 @@ def view_products(user_id):
 
     return products
 
+# Add a new product
+def add_product(user_id):
+    print("=== Add Product ===")
+    name = input("Enter product name: ")
+    price = float(input("Enter product price: "))
+    
+    cursor.execute("INSERT INTO products (user_id, name, price) VALUES (?, ?, ?)", (user_id, name, price))
+    conn.commit()
+    print("Product added successfully!")
+
+# Remove a product
+def remove_product(user_id):
+    products = view_products(user_id)
+    if not products:
+        return
+    
+    try:
+        choice = int(input("Select a product to remove (number): ")) - 1
+        if 0 <= choice < len(products):
+            product_id = products[choice][0]
+            cursor.execute("DELETE FROM products WHERE id = ?", (product_id,))
+            cursor.execute("DELETE FROM expenses WHERE product_id = ?", (product_id,))
+            conn.commit()
+            print("Product removed successfully!")
+        else:
+            print("Invalid choice.")
+    except ValueError:
+        print("Invalid input.")
+
+# Add an expense
+def add_expense(product_id):
+    print("=== Add Expense ===")
+    name = input("Enter expense name: ")
+    amount = float(input("Enter expense amount: "))
+
+    cursor.execute("INSERT INTO expenses (product_id, name, amount) VALUES (?, ?, ?)", (product_id, name, amount))
+    conn.commit()
+    print("Expense added successfully!")
+
+# Remove an expense
+def remove_expense(product_id):
+    cursor.execute("SELECT id, name, amount FROM expenses WHERE product_id = ?", (product_id,))
+    expenses = cursor.fetchall()
+    
+    if not expenses:
+        print("No expenses found.")
+        return
+    
+    print("\n=== Expenses ===")
+    for index, (exp_id, name, amount) in enumerate(expenses, start=1):
+        print(f"{index}. {name} - ${amount:.2f}")
+
+    try:
+        choice = int(input("Select an expense to remove (number): ")) - 1
+        if 0 <= choice < len(expenses):
+            expense_id = expenses[choice][0]
+... (40 lines left)
+
 
 # Main menu
 def main_menu(user_id):
