@@ -5,6 +5,25 @@ import sqlite3
 def clear_screen():
     os.system("cls" if os.name == "nt" else "clear")
 
+# Function to display a header with a title
+def display_header(title):
+    clear_screen()
+    print("=" * 60)
+    print(f"=== {title.upper()} ===")
+    print("=" * 60)
+
+# Function to display a box with a message
+def display_box(message):
+    print("+" + "-" * (len(message) + 2) + "+")
+    print(f"| {message} |")
+    print("+" + "-" * (len(message) + 2) + "+")
+
+# Function to display a list of options in a box
+def display_options(options):
+    print("+" + "-" * 30 + "+")
+    for index, option in enumerate(options, start=1):
+        print(f"| {index}. {option.ljust(26)} |")
+    print("+" + "-" * 30 + "+")
 
 # Database Manager
 class Database:
@@ -66,28 +85,26 @@ class User:
         self.id = None
 
     def register(self):
-        clear_screen()
-        print("=== Register ===")
+        display_header("Register")
         self.username = input("Enter a username: ")
         self.password = input("Enter a password: ")
         try:
             self.db.execute_query("INSERT INTO users (username, password) VALUES (?, ?)", (self.username, self.password))
-            print("Registration successful! You can now log in.")
+            display_box("Registration successful! You can now log in.")
         except sqlite3.IntegrityError:
-            print("Username already exists. Try a different one.")
+            display_box("Username already exists. Try a different one.")
 
     def login(self):
-        clear_screen()
-        print("=== Login ===")
+        display_header("Login")
         self.username = input("Enter your username: ")
         self.password = input("Enter your password: ")
         user = self.db.fetch_one("SELECT id FROM users WHERE username = ? AND password = ?", (self.username, self.password))
         if user:
             self.id = user[0]
-            print("Login successful!")
+            display_box("Login successful!")
             return True
         else:
-            print("Invalid credentials. Try again.")
+            display_box("Invalid credentials. Try again.")
             input("Press Enter to continue...")
             return False
 
@@ -102,11 +119,11 @@ class Product:
         self.id = None
 
     def add_product(self):
-        print("=== Add Product ===")
+        display_header("Add Product")
         self.name = input("Enter product name: ")
         self.price = float(input("Enter product price: "))
         self.db.execute_query("INSERT INTO products (user_id, name, price) VALUES (?, ?, ?)", (self.user_id, self.name, self.price))
-        print("Product added successfully!")
+        display_box("Product added successfully!")
 
     def remove_product(self):
         products = self.view_products()
@@ -119,22 +136,23 @@ class Product:
                 product_id = products[choice][0]
                 self.db.execute_query("DELETE FROM products WHERE id = ?", (product_id,))
                 self.db.execute_query("DELETE FROM expenses WHERE product_id = ?", (product_id,))
-                print("Product removed successfully!")
+                display_box("Product removed successfully!")
             else:
-                print("Invalid choice.")
+                display_box("Invalid choice.")
         except ValueError:
-            print("Invalid input.")
+            display_box("Invalid input.")
 
     def view_products(self):
         products = self.db.fetch_all("SELECT id, name, price FROM products WHERE user_id = ?", (self.user_id,))
         
         if not products:
-            print("No products found.")
+            display_box("No products found.")
             return []
 
-        print("\n=== Products ===")
+        display_header("Products")
         for index, (prod_id, name, price) in enumerate(products, start=1):
             print(f"{index}. {name} - ${price:.2f}")
+        print("-" * 60)
 
         return products
 
@@ -148,102 +166,93 @@ class Expense:
         self.amount = amount
 
     def add_expense(self):
-        print("=== Add Expense ===")
+        display_header("Add Expense")
         self.name = input("Enter expense name: ")
         self.amount = float(input("Enter expense amount: "))
         self.db.execute_query("INSERT INTO expenses (product_id, name, amount) VALUES (?, ?, ?)", (self.product_id, self.name, self.amount))
-        print("Expense added successfully!")
+        display_box("Expense added successfully!")
 
     def remove_expense(self):
         expenses = self.db.fetch_all("SELECT id, name, amount FROM expenses WHERE product_id = ?", (self.product_id,))
         
         if not expenses:
-            print("No expenses found.")
+            display_box("No expenses found.")
             return
 
-        print("\n=== Expenses ===")
+        display_header("Expenses")
         for index, (exp_id, name, amount) in enumerate(expenses, start=1):
             print(f"{index}. {name} - ${amount:.2f}")
+        print("-" * 60)
 
         try:
             choice = int(input("Select an expense to remove (number): ")) - 1
             if 0 <= choice < len(expenses):
                 expense_id = expenses[choice][0]
                 self.db.execute_query("DELETE FROM expenses WHERE id = ?", (expense_id,))
-                print("Expense removed successfully!")
+                display_box("Expense removed successfully!")
         except ValueError:
-            print("Invalid input.")
+            display_box("Invalid input.")
             
     def view_product_report(self):
-        # Fetch product price
         product = self.db.fetch_one("SELECT price FROM products WHERE id = ?", (self.product_id,))
         if not product:
-            print("Error: Product not found.")
+            display_box("Error: Product not found.")
             return
 
-        price = product[0]  # Extract price from tuple
+        price = product[0]
         total_expenses = self.db.fetch_one("SELECT SUM(amount) FROM expenses WHERE product_id = ?", (self.product_id,))[0] or 0
 
         net_income_per_unit = price - total_expenses
-        print("\n=== Product Report ===")
+        display_header("Product Report")
         print(f"Product Price: ${price:.2f}")
         print(f"Total Expenses: ${total_expenses:.2f}")
         print(f"Net Income Per Unit: ${net_income_per_unit:.2f}")
+        print("-" * 60)
 
     def simulate_profit(self):
-        # Fetch product price
         product = self.db.fetch_one("SELECT price FROM products WHERE id = ?", (self.product_id,))
         if not product:
-            print("Error: Product not found.")
+            display_box("Error: Product not found.")
             return
 
-        price = product[0]  # Extract price from tuple
+        price = product[0]
         total_expenses = self.db.fetch_one("SELECT SUM(amount) FROM expenses WHERE product_id = ?", (self.product_id,))[0] or 0
 
         net_income_per_unit = price - total_expenses
         try:
             quantity = int(input("Enter number of products sold: "))
             if quantity < 0:
-                print("Quantity cannot be negative.")
+                display_box("Quantity cannot be negative.")
                 return
-            total_profit = net_income_per_unit * quantity  # Total profit calculation
+            total_profit = net_income_per_unit * quantity
 
-            print("\n=== Profit Simulation ===")
+            display_header("Profit Simulation")
             print(f"Net Income Per Unit: ${net_income_per_unit:.2f}")
             print(f"Estimated Profit for {quantity} units: ${total_profit:.2f}")
+            print("-" * 60)
         except ValueError:
-            print("Invalid input. Please enter a number.")
-        
+            display_box("Invalid input. Please enter a number.")
 
 
 # Main Menu
 def main_menu(user):
     while True:
-        clear_screen()
-        print("=== Main Menu ===")
-        print("1. View Products")
-        print("2. Add Product")
-        print("3. Remove Product")
-        print("4. Choose a Product to Manage Expenses")
-        print("5. Logout")
+        display_header("Main Menu")
+        display_options(["View Products", "Add Product", "Remove Product", "Manage Expenses", "Logout"])
         choice = input("Enter your choice: ")
 
         product_manager = Product(user.db, user.id)
 
         if choice == "1":
-            clear_screen()
             product_manager.view_products()
             input("Press Enter to continue...")
         elif choice == "2":
-            clear_screen()
             product_manager.add_product()
             input("Press Enter to continue...")
         elif choice == "3":
-            clear_screen()
             product_manager.remove_product()
             input("Press Enter to continue...")
         elif choice == "4":
-            clear_screen()
             products = product_manager.view_products()
             if not products:
                 input("Press Enter to continue...")
@@ -255,66 +264,47 @@ def main_menu(user):
                     product_id = products[product_choice][0]
                     manage_expenses(user.db, product_id)
                 else:
-                    print("Invalid choice.")
+                    display_box("Invalid choice.")
             except ValueError:
-                print("Invalid input.")
-
+                display_box("Invalid input.")
         elif choice == "5":
-            print("Logging out...\n")
+            display_box("Logging out...")
             break
 
 
 # Expense Management Menu
 def manage_expenses(db, product_id):
     while True:
-        clear_screen()
-        print("=== Expense Management ===")
-        print("1. View Expenses")
-        print("2. Add Expense")
-        print("3. Remove Expense")
-        print("4. View Product Report")
-        print("5. Simulate Profit")
-        print("6. Go Back")
-
-        expense_manager = Expense(db, product_id)
+        display_header("Expense Management")
+        display_options(["View Expenses", "Add Expense", "Remove Expense", "View Product Report", "Simulate Profit", "Go Back"])
         choice = input("Enter your choice: ")
 
-        if choice == "1":  # View Expenses (No Deletion)
-            clear_screen()
+        expense_manager = Expense(db, product_id)
+
+        if choice == "1":
             expenses = db.fetch_all("SELECT name, amount FROM expenses WHERE product_id = ?", (product_id,))
-            
             if not expenses:
-                print("No expenses found.")
+                display_box("No expenses found.")
             else:
-                print("\n=== Expenses ===")
+                display_header("Expenses")
                 for index, (name, amount) in enumerate(expenses, start=1):
                     print(f"{index}. {name} - ${amount:.2f}")
-
-            input("\nPress Enter to continue...")
-
-        elif choice == "2":  # Add Expense
-            clear_screen()
+                print("-" * 60)
+            input("Press Enter to continue...")
+        elif choice == "2":
             expense_manager.add_expense()
             input("Press Enter to continue...")
-
-        elif choice == "3":  # Remove Expense
-            clear_screen()
+        elif choice == "3":
             expense_manager.remove_expense()
             input("Press Enter to continue...")
-            
-        elif choice == "4":  # View Product Report
-            clear_screen()
+        elif choice == "4":
             expense_manager.view_product_report()
             input("Press Enter to continue...")
-
-        elif choice == "5":  # Simulate Profit
-            clear_screen()
+        elif choice == "5":
             expense_manager.simulate_profit()
             input("Press Enter to continue...")
-
-        elif choice == "6":  # Go Back
+        elif choice == "6":
             break
-
 
 
 # Program Entry Point
@@ -322,11 +312,8 @@ def main():
     db = Database()
 
     while True:
-        clear_screen()
-        print("=== Small Business Expense Tracker ===")
-        print("1. Register")
-        print("2. Login")
-        print("3. Exit")
+        display_header("Xpense - Small Business Expense Tracker")
+        display_options(["Register", "Login", "Exit"])
         user_choice = input("Enter your choice: ")
 
         user = User(db)
@@ -337,7 +324,7 @@ def main():
             if user.login():
                 main_menu(user)
         elif user_choice == "3":
-            print("Goodbye!")
+            display_box("Goodbye!")
             break
 
 
