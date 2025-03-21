@@ -79,8 +79,17 @@ class Expense:
             
     # Expense Management Menu
     def manage_expenses(db, product_id):
+        # Fetch the product name
+        product = db.fetch_one("SELECT name FROM products WHERE id = ?", (product_id,))
+        
+        if not product:
+            Ui.display_error("Error: Product not found.")
+            return
+
+        product_name = product[0]  # Extract the product name
+
         while True:
-            Ui.display_header("Expense Management")
+            Ui.display_header(f"{product_name}")  # Display product name in header
             Ui.display_options(["View Expenses", "Add Expense", "Remove Expense", "View Product Report", "Simulate Profit", "Go Back"])
             choice = input(Fore.BLUE + "Enter your choice: ")
 
@@ -91,7 +100,7 @@ class Expense:
                 if not expenses:
                     Ui.display_error("No expenses found.")
                 else:
-                    Ui.display_header("Expenses")
+                    Ui.display_header(f"Expenses for {product_name}")
                     for index, (name, amount) in enumerate(expenses, start=1):
                         print(Fore.CYAN + f"{index}. {name} - ${amount:.2f}")
                     print(Fore.YELLOW + "-" * 60)

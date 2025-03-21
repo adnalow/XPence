@@ -51,7 +51,7 @@ def main():
     db = Database()
 
     while True:
-        Ui.display_header("Xpense - Small Business Expense Tracker")
+        Ui.display_header("Xpence - Small Business Expense Tracker")
         Ui.display_options(["Register", "Login", "Exit"])
         user_choice = input(Fore.BLUE + "Enter your choice: ")
 
