@@ -14,16 +14,10 @@ class TestDatabase(Database):
 
 
 def interactive_login_test(user):
-    print("\n" + "=" * 20)
-    print("Login Test Case")
-    print("=" * 20)
     result = user.login()
 
 
 def interactive_register_test(user, valid_credentials):
-    print("\n" + "=" * 20)
-    print("Register Test Case")
-    print("=" * 20)
     user.username = user.username
     user.password = user.password
 
