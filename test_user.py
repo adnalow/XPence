@@ -41,9 +41,9 @@ def main():
     # Preload known users
     valid_credentials = {
         "user": "password",
-        "monsi": "monsi",
-        "luna": "luna",
-        "angel": "angel",
+        "monsi": "monsipassword",
+        "luna": "lunapassword",
+        "angel": "angelpassword",
     }
 
     for username, password in valid_credentials.items():
@@ -52,7 +52,7 @@ def main():
         )
 
     while True:
-        print("\n=== Login/Register Test Case ===")
+        print("\nLogin/Register Test Case\n")
         print("1. Login Test")
         print("2. Register Test")
         print("3. Exit")
