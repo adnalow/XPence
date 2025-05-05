@@ -12,8 +12,21 @@ class Product:
 
     def add_product(self):
         Ui.display_header("Add Product")
-        self.name = input(Fore.BLUE + "Enter product name: ")
-        self.price = float(input(Fore.BLUE + "Enter product price: "))
+        self.name = input(Fore.BLUE + "Enter product name: ").strip()
+        if not self.name:
+            Ui.display_error("Product name cannot be empty.")
+            return
+        try:
+            self.price = float(input(Fore.BLUE + "Enter product price: "))
+        except ValueError:
+            Ui.display_error("Invalid price. Please enter a number.")
+            return
+        if self.price == 0:
+            Ui.display_error("Product price cannot be zero.")
+            return
+        if self.price < 0:
+            Ui.display_error("Product price cannot be negative.")
+            return
         self.db.execute_query("INSERT INTO products (user_id, name, price) VALUES (?, ?, ?)", (self.user_id, self.name, self.price))
         Ui.display_success("Product added successfully!")
 

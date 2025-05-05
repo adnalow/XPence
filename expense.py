@@ -11,8 +11,21 @@ class Expense:
 
     def add_expense(self):
         Ui.display_header("Add Expense")
-        self.name = input(Fore.BLUE + "Enter expense name: ")
-        self.amount = float(input(Fore.BLUE + "Enter expense amount: "))
+        self.name = input(Fore.BLUE + "Enter expense name: ").strip()
+        if not self.name:
+            Ui.display_error("Expense name cannot be empty.")
+            return
+        try:
+            self.amount = float(input(Fore.BLUE + "Enter expense amount: "))
+        except ValueError:
+            Ui.display_error("Invalid amount. Please enter a number.")
+            return
+        if self.amount == 0:
+            Ui.display_error("Expense amount cannot be zero.")
+            return
+        if self.amount < 0:
+            Ui.display_error("Expense amount cannot be negative.")
+            return
         self.db.execute_query("INSERT INTO expenses (product_id, name, amount) VALUES (?, ?, ?)", (self.product_id, self.name, self.amount))
         Ui.display_success("Expense added successfully!")
 
@@ -30,10 +43,12 @@ class Expense:
 
         try:
             choice = int(input(Fore.BLUE + "Select an expense to remove (number): ")) - 1
-            if 0 <= choice < len(expenses):
-                expense_id = expenses[choice][0]
-                self.db.execute_query("DELETE FROM expenses WHERE id = ?", (expense_id,))
-                Ui.display_success("Expense removed successfully!")
+            if choice < 0 or choice >= len(expenses):
+                Ui.display_error("Invalid choice. Please select a valid expense number.")
+                return
+            expense_id = expenses[choice][0]
+            self.db.execute_query("DELETE FROM expenses WHERE id = ?", (expense_id,))
+            Ui.display_success("Expense removed successfully!")
         except ValueError:
             Ui.display_error("Invalid input.")
             
@@ -67,6 +82,9 @@ class Expense:
             quantity = int(input(Fore.BLUE + "Enter number of products sold: "))
             if quantity < 0:
                 Ui.display_error("Quantity cannot be negative.")
+                return
+            if quantity == 0:
+                Ui.display_error("Quantity cannot be zero.")
                 return
             total_profit = net_income_per_unit * quantity
 
